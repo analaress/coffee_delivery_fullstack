@@ -105,12 +105,27 @@ export class CoffeesService {
     };
   }
 
-  async remove(id: string) {
-    const existing = await this.prisma.coffee.findUnique({ where: { id } });
-    if (!existing) throw new NotFoundException('Café não encontrado');
+async remove(id: string) {
+  const coffeeId = id; // ajuste se id for number: Number(id)
 
-    await this.prisma.coffee.delete({ where: { id } });
-  }
+  const existing = await this.prisma.coffee.findUnique({ where: { id: coffeeId } });
+  if (!existing) throw new NotFoundException('Café não encontrado');
+
+  // Apagar relações em CoffeeTag
+  await this.prisma.coffeeTag.deleteMany({
+    where: { coffeeId },
+  });
+
+  // Apagar relações em CartItem
+  await this.prisma.cartItem.deleteMany({
+    where: { coffeeId },
+  });
+
+  // Apagar o café
+  await this.prisma.coffee.delete({
+    where: { id: coffeeId },
+  });
+}
 
   async filterAdvanced(filters: {
     name?: string;
